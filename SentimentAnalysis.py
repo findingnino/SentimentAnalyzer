@@ -22,10 +22,5 @@ def main():
         print classifier.classify(emails)
     print "Testing done", time.ctime()
 
-    winsound.Beep(600, 1000)
-    time.sleep(.5)
-    winsound.Beep(450, 500)
-    time.sleep(1)
-
 if __name__ == '__main__':
     main()
