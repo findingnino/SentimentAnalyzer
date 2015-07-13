@@ -1,5 +1,5 @@
-import email.message, email.parser, email, json, re, email.utils, mailbox
-from os import listdir, walk
+import email, json, re, email.utils
+from os import listdir
 
 class Email(object):
     def __init__(self, email_path):
@@ -15,14 +15,10 @@ class Email(object):
                 if part.get_content_type() == 'text/plain':
                     self.body = remove_junk(str(part.get_payload(decode=True)))
                     self.get_label()
-                    if len(self.body) <= 16:
-                        self.valid = False
                     return
         else:
             self.body = remove_junk(str(msg.get_payload(decode=True)))
             self.get_label()
-            if len(self.body) <= 16:
-                self.valid = False
             return
 
     def get_label(self):
@@ -33,22 +29,32 @@ class Email(object):
         elif "bash" in self.path:
             self.label = "negative"
 
-    def construct_dict(self): #this function isn't working correctly
-        """Constructs a dictionary of email information."""
-        self.get_body()
-        try: #try fails and function jumps to except
-            email_dict = {}
-            email_dict['text'] = self.body
-            email_dict['label'] = self.label
-            print "email_dict:" + email_dict #debug line
-            print ("self.body:" + self.body, "self.label:" + self.label) #debug
-            return email_dict
-        except:
-            print "self.label", self.label #debug
-            print "self.body", self.body #debug
-            print "construct_dict failed" #debug
-            return False
+    def validate(self):
+        """Validates emails before adding it to the dictionary of emails."""
+        fp = open(self.path)
+        msg = email.message_from_file(fp)
+        for item in msg.items():
+            if item[0] == 'From':
+                address = email.utils.parseaddr(item[1])
+                self.address = address[1]
+                if "google.com" in self.address or "Google.com" in self.address or "pols.exp@gmail.com" in self.address:
+                    self.valid = False
+                    return
+                else:
+                    self.valid = True
+            if len(self.body) <= 16:
+                self.valid = False
 
+    def construct_dict(self):
+        """Constructs a dictionary of email text and sentiment."""
+        self.get_body()
+        self.validate()
+        if self.valid == False:
+            return False
+        email_dict = {}
+        email_dict['text'] = self.body
+        email_dict['label'] = self.label
+        return email_dict
 
 class Directory(Email):
     def __init__(self,directory):
@@ -68,12 +74,9 @@ class Directory(Email):
         eml_list = []
         for folders in self.dir_list(self.directory):
             self.eml = self.directory + '/' + folders
-            print ("self.eml:" + self.eml) #debug
             for email in self.dir_list(self.eml):
                 self.path = self.eml + '/' + email
-                print ("self.path:" + self.path) #debug
                 eml_dict = self.construct_dict()
-                print "eml_dict:", eml_dict #debug
                 if eml_dict:
                     eml_list.append(eml_dict)
         return eml_list
