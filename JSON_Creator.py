@@ -103,12 +103,9 @@ def remove_non_ascii(text):
     return ''.join(i for i in text if ord(i)<128)
 
 def main():
-    path = "C:/users/class2017/desktop/train100"
-    #path = raw_input("Please enter the path of the folder I should train from?")
+    path = raw_input("Please enter the path of the folder I should train from?")
     p = Directory(path)
-
-    json_fp = "C:/users/class2017/desktop/json100"
-    #json_fp = raw_input("Where should I save the train json?")
+    json_fp = raw_input("Where should I save the train json?")
     p.convert_json(json_fp)
  
 if __name__ == '__main__':
